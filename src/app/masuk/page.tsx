@@ -11,7 +11,7 @@ import { useApp } from '@/context/AppContext';
 
 export default function MasukPage() {
   const router = useRouter();
-  const { setUserContext, setIsDemoMode, logout } = useApp();
+  const { setUserContext, setIsDemoMode, resetDemoData, logout } = useApp();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,8 +50,8 @@ export default function MasukPage() {
       await logout();
       localStorage.setItem('nexalora_remember_session', String(rememberMe));
 
-      // Otentikasi Sesi Siswa Riil
-      setIsDemoMode(false);
+      // Otentikasi Sesi Siswa (Mode Demo/Dummy Auth)
+      setIsDemoMode(true);
       const rawName = email.split('@')[0];
       const capitalized = rawName.charAt(0).toUpperCase() + rawName.slice(1).replace(/[._-]/g, ' ');
       setUserContext({
@@ -71,12 +71,32 @@ export default function MasukPage() {
     }
   };
 
-  const handleQuickLogin = (nama: string, kelas: 'XI' | 'XII', tahun: number) => {
-    logout();
-    setIsDemoMode(false);
-    setUserContext({ namaPanggilan: nama, kelas, tahunKelulusan: tahun });
-    localStorage.setItem('nexalora_active_user', JSON.stringify({ email: `${nama.toLowerCase()}@contoh.sch.id`, nickname: nama }));
+  const handleQuickLoginRani = () => {
+    resetDemoData();
+    setIsDemoMode(true);
+    localStorage.setItem('nexalora_active_user', JSON.stringify({ email: 'rani.putri@contoh.sch.id', nickname: 'Rani' }));
     router.push('/beranda');
+  };
+
+  const handleQuickLoginDimas = () => {
+    logout();
+    setIsDemoMode(true);
+    setUserContext({ namaPanggilan: 'Dimas', kelas: 'XI', tahunKelulusan: 2027 });
+    localStorage.setItem('nexalora_active_user', JSON.stringify({ email: 'dimas@contoh.sch.id', nickname: 'Dimas' }));
+    router.push('/beranda');
+  };
+
+  const handleDemoOnboarding = () => {
+    logout();
+    setIsDemoMode(true);
+    setUserContext({ namaPanggilan: 'Siswa Baru', kelas: 'XII', tahunKelulusan: 2026 });
+    localStorage.setItem('nexalora_active_user', JSON.stringify({ email: 'siswa.baru@sekolah.sch.id', nickname: 'Siswa Baru' }));
+    router.push('/onboarding');
+  };
+
+  const handleFillDemoForm = () => {
+    setEmail('siswa.demo@nexalora.id');
+    setPassword('demo123456');
   };
 
   return (
@@ -128,6 +148,28 @@ export default function MasukPage() {
               <p className="text-xs sm:text-sm text-text-secondary mt-1">
                 Lanjutkan eksplorasi jurusan dan simulasi belajarmu
               </p>
+            </div>
+
+            {/* Demo Notice Banner with Auto-fill helper */}
+            <div className="mb-4 p-3 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-start gap-2.5 text-xs text-indigo-950">
+              <span className="material-symbols-outlined text-[#5B5BD6] text-[18px] shrink-0 mt-0.5">
+                verified
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-bold text-indigo-950">Mode Demo Aktif</span>
+                  <button
+                    type="button"
+                    onClick={handleFillDemoForm}
+                    className="text-[11px] font-bold text-[#5B5BD6] hover:underline shrink-0"
+                  >
+                    Isi Otomatis
+                  </button>
+                </div>
+                <p className="text-[11px] text-indigo-800 leading-snug mt-0.5">
+                  Bisa masuk dengan email apa saja, atau langsung pilih akun contoh di bawah.
+                </p>
+              </div>
             </div>
 
             {/* Error / Alert banner */}
@@ -218,30 +260,39 @@ export default function MasukPage() {
                 </Button>
 
                 {/* Quick Presets for Demo / Testing */}
-                <div className="pt-1">
+                <div className="pt-2">
                   <div className="relative flex py-2 items-center">
                     <div className="flex-grow border-t border-slate-200"></div>
                     <span className="flex-shrink mx-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                      Atau Masuk Cepat Akun Contoh
+                      Akses Cepat Mode Demo
                     </span>
                     <div className="flex-grow border-t border-slate-200"></div>
                   </div>
                   <div className="grid grid-cols-2 gap-2 pt-1">
                     <button
                       type="button"
-                      onClick={() => handleQuickLogin('Dimas', 'XI', 2027)}
-                      className="px-2 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 text-slate-700 text-xs font-semibold transition-all text-center"
+                      onClick={handleQuickLoginRani}
+                      className="px-2 py-2 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-900 text-xs font-semibold transition-all text-center flex flex-col items-center justify-center gap-0.5"
                     >
-                      Siswa Dimas (XI)
+                      <span className="font-bold">Siswi Rani (XII)</span>
+                      <span className="text-[10px] text-indigo-700">Data Lengkap</span>
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleQuickLogin('Rani', 'XII', 2026)}
-                      className="px-2 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-indigo-50 hover:border-indigo-200 text-slate-700 text-xs font-semibold transition-all text-center"
+                      onClick={handleQuickLoginDimas}
+                      className="px-2 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-all text-center flex flex-col items-center justify-center gap-0.5"
                     >
-                      Siswi Rani (XII)
+                      <span className="font-bold">Siswa Dimas (XI)</span>
+                      <span className="text-[10px] text-slate-500">Eksplorasi Awal</span>
                     </button>
                   </div>
+                  <button
+                    type="button"
+                    onClick={handleDemoOnboarding}
+                    className="w-full mt-2 py-1.5 px-2 rounded-lg border border-dashed border-slate-300 hover:border-[#5B5BD6] hover:bg-indigo-50/30 text-slate-600 hover:text-[#5B5BD6] text-[11px] font-semibold transition-all text-center"
+                  >
+                    + Coba Alur Onboarding Siswa Baru
+                  </button>
                 </div>
               </div>
             </form>

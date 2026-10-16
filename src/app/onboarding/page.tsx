@@ -13,6 +13,7 @@ import { submitInterests, updateProfile } from '@/lib/api/endpoints';
 export default function OnboardingPage() {
   const router = useRouter();
   const {
+    userContext,
     setUserContext,
     setPreferences,
     setAcademic,
@@ -23,10 +24,22 @@ export default function OnboardingPage() {
   // Step 1: Konteks (UX-07), Step 2: Preferensi (UX-08), Step 3: Akademik (UX-09), Step 4: Minat (UX-10), Step 5: Ringkasan (UX-11)
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1);
 
-  // UX-07 state: Clean empty defaults
-  const [namaPanggilan, setNamaPanggilan] = useState('');
-  const [kelas, setKelas] = useState<'XI' | 'XII'>('XII');
-  const [tahunKelulusan, setTahunKelulusan] = useState(2026);
+  // UX-07 state: Clean empty defaults or prefill from userContext
+  const [namaPanggilan, setNamaPanggilan] = useState(userContext.namaPanggilan || '');
+  const [kelas, setKelas] = useState<'XI' | 'XII'>((userContext.kelas as 'XI' | 'XII') || 'XII');
+  const [tahunKelulusan, setTahunKelulusan] = useState(userContext.tahunKelulusan || 2026);
+
+  React.useEffect(() => {
+    if (userContext.namaPanggilan && !namaPanggilan) {
+      setNamaPanggilan(userContext.namaPanggilan);
+    }
+    if (userContext.kelas) {
+      setKelas(userContext.kelas as 'XI' | 'XII');
+    }
+    if (userContext.tahunKelulusan) {
+      setTahunKelulusan(userContext.tahunKelulusan);
+    }
+  }, [userContext]);
 
   // UX-08 state: Clean empty defaults
   const [domisili, setDomisili] = useState('');

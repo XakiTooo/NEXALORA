@@ -11,7 +11,7 @@ import { useApp } from '@/context/AppContext';
 
 export default function DaftarPage() {
   const router = useRouter();
-  const { logout, setIsDemoMode, setUserContext } = useApp();
+  const { logout, setIsDemoMode, setUserContext, resetDemoData } = useApp();
   const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [email, setEmail] = useState('');
@@ -48,8 +48,8 @@ export default function DaftarPage() {
     try {
       await logout();
 
-      // Buat sesi siswa riil berdasarkan input pendaftaran
-      setIsDemoMode(false);
+      // Buat sesi siswa riil berdasarkan input pendaftaran (Mode Demo/Dummy Auth)
+      setIsDemoMode(true);
       const rawName = email.split('@')[0];
       const capitalized = rawName.charAt(0).toUpperCase() + rawName.slice(1).replace(/[._-]/g, ' ');
       setUserContext({
@@ -65,6 +65,28 @@ export default function DaftarPage() {
       submittingRef.current = false;
       setIsLoading(false);
     }
+  };
+
+  const handleFillDemoForm = () => {
+    setEmail('siswa.baru@sekolah.sch.id');
+    setPassword('nexalora2026');
+    setConfirmPassword('nexalora2026');
+    setAgreeTerms(true);
+  };
+
+  const handleSkipToOnboarding = () => {
+    logout();
+    setIsDemoMode(true);
+    setUserContext({ namaPanggilan: 'Siswa Baru', kelas: 'XII', tahunKelulusan: 2026 });
+    localStorage.setItem('nexalora_active_user', JSON.stringify({ email: 'siswa.baru@sekolah.sch.id', nickname: 'Siswa Baru' }));
+    router.push('/onboarding');
+  };
+
+  const handleQuickDemoRani = () => {
+    resetDemoData();
+    setIsDemoMode(true);
+    localStorage.setItem('nexalora_active_user', JSON.stringify({ email: 'rani.putri@contoh.sch.id', nickname: 'Rani' }));
+    router.push('/beranda');
   };
 
   return (
@@ -100,6 +122,28 @@ export default function DaftarPage() {
               <p className="text-xs sm:text-sm text-text-secondary mt-1">
                 Mulai eksplorasi jurusan dan simulasi belajarmu di NEXALORA
               </p>
+            </div>
+
+            {/* Demo Notice Banner with Auto-fill helper */}
+            <div className="mb-4 p-3 rounded-xl bg-indigo-50 border border-indigo-200/80 flex items-start gap-2.5 text-xs text-indigo-950">
+              <span className="material-symbols-outlined text-[#5B5BD6] text-[18px] shrink-0 mt-0.5">
+                verified
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between gap-1">
+                  <span className="font-bold text-indigo-950">Pendaftaran Mode Demo</span>
+                  <button
+                    type="button"
+                    onClick={handleFillDemoForm}
+                    className="text-[11px] font-bold text-[#5B5BD6] hover:underline shrink-0"
+                  >
+                    Isi Otomatis
+                  </button>
+                </div>
+                <p className="text-[11px] text-indigo-800 leading-snug mt-0.5">
+                  Daftar instan tanpa aktivasi email sungguhan, atau gunakan opsi coba demo langsung di bawah.
+                </p>
+              </div>
             </div>
 
             {errorMsg && (
@@ -189,7 +233,7 @@ export default function DaftarPage() {
                 </label>
               </div>
 
-              <div className="pt-2">
+              <div className="pt-2 space-y-2">
                 <Button
                   type="submit"
                   size="lg"
@@ -199,6 +243,35 @@ export default function DaftarPage() {
                 >
                   Daftar &amp; Lanjut ke Onboarding
                 </Button>
+
+                {/* Quick Demo Options */}
+                <div className="pt-2">
+                  <div className="relative flex py-2 items-center">
+                    <div className="flex-grow border-t border-slate-200"></div>
+                    <span className="flex-shrink mx-2 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Atau Coba Demo Langsung
+                    </span>
+                    <div className="flex-grow border-t border-slate-200"></div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleSkipToOnboarding}
+                      className="px-2 py-2 rounded-xl border border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-semibold transition-all text-center flex flex-col items-center justify-center gap-0.5"
+                    >
+                      <span className="font-bold">Onboarding Demo</span>
+                      <span className="text-[10px] text-slate-500">Mulai dari Tahap 1</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleQuickDemoRani}
+                      className="px-2 py-2 rounded-xl border border-indigo-200 bg-indigo-50/70 hover:bg-indigo-100 text-indigo-900 text-xs font-semibold transition-all text-center flex flex-col items-center justify-center gap-0.5"
+                    >
+                      <span className="font-bold">Akun Rani (XII)</span>
+                      <span className="text-[10px] text-indigo-700">Langsung Dashboard</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             </form>
 
