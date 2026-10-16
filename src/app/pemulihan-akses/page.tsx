@@ -1,0 +1,2 @@
+import Link from 'next/link';
+export default function Page() { return <main className="min-h-screen bg-canvas flex items-center justify-center p-6"><section className="bg-white rounded-2xl border p-8 max-w-md space-y-4"><h1 className="text-2xl font-bold">Tidak perlu memulihkan akun</h1><p>Versi demo tidak menggunakan email atau kata sandi. Mulai sesi baru untuk mencoba kembali.</p><Link className="block text-indigo-700 font-semibold" href="/masuk">Mulai sesi demo</Link></section></main>; }
