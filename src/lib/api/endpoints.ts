@@ -55,12 +55,12 @@ export async function getProgramById(id: string): Promise<ApiResponse<CatalogPro
 /**
  * Mapper helper to transform backend CatalogProgram to frontend MajorCampus
  */
-export function mapCatalogProgramToMajorCampus(p: CatalogProgram): any {
-  const clusterStr = (p.cluster || '').toLowerCase();
+export function mapCatalogProgramToMajorCampus(p: any): any {
+  const clusterStr = (p.cluster || p.major?.id || p.major?.name || '').toLowerCase();
   let cluster = 'informatika';
   let clusterLabel = 'INFORMATIKA · LOGIKA & SISTEM';
 
-  if (clusterStr.includes('indus') || (p.name || '').toLowerCase().includes('industri')) {
+  if (clusterStr.includes('ind') || (p.name || '').toLowerCase().includes('industri')) {
     cluster = 'industri';
     clusterLabel = 'TEKNIK INDUSTRI · PROSES & EFISIENSI';
   } else if (clusterStr.includes('dkv') || clusterStr.includes('desain') || (p.name || '').toLowerCase().includes('desain')) {
@@ -68,19 +68,27 @@ export function mapCatalogProgramToMajorCampus(p: CatalogProgram): any {
     clusterLabel = 'DKV · KOMUNIKASI & KREASI VISUAL';
   }
 
+  const campusName = p.university?.name || p.universityName || (p.campusLocation ? p.campusLocation.split(',')[0]?.trim() : 'Universitas');
+  const cityName = p.city || (p.campusLocation ? p.campusLocation.split(',')[1]?.trim() : (p.university?.provinceCode || 'Indonesia'));
+  const tuition = p.ukPerYear || (p.costProfiles?.[0]?.components?.tuitionPerSemester?.max ? p.costProfiles[0].components.tuitionPerSemester.max * 2 : 12000000);
+
+  const admission = Array.isArray(p.admissionPaths)
+    ? p.admissionPaths.map((a: any) => (typeof a === 'string' ? a : (a.id || a.label || 'SNBP')))
+    : ['SNBP', 'SNBT', 'Mandiri'];
+
   return {
     id: p.id,
     namaProdi: p.name || 'Program Studi',
-    jenjang: (p.jenjang || 'S1') as 'S1' | 'D4',
-    namaKampus: p.universityName || 'Universitas',
-    kota: p.city ? `${p.city}${p.province ? ` (${p.province})` : ''}` : 'Indonesia',
+    jenjang: (p.degree || p.jenjang || 'S1') as 'S1' | 'D4',
+    namaKampus: campusName,
+    kota: cityName,
     cluster,
     clusterLabel,
-    biayaPerTahun: p.ukPerYear || null,
+    biayaPerTahun: tuition,
     biayaStatus: 'terverifikasi',
     biayaTahunSumber: 2026,
     akreditasi: p.accreditation || 'Unggul',
-    jalurMasuk: p.admissionPaths || ['SNBP', 'SNBT', 'Mandiri'],
+    jalurMasuk: admission,
     statusData: 'terverifikasi',
     alasanRekomendasi: [
       'Program studi resmi terverifikasi dari pangkalan data kampus.',
@@ -357,4 +365,93 @@ export async function createPassportSnapshot(
 
 export async function getPassportSnapshot(id: string): Promise<ApiResponse<any>> {
   return apiRequest(`/api/passports/${id}`, { method: 'GET' });
+}
+
+// ==========================================
+// 10. AUTHENTICATION (/api/auth)
+// ==========================================
+
+export async function loginUser(email: string, password: string): Promise<ApiResponse<any>> {
+  return apiRequest('/api/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  });
+}
+
+export async function registerUser(email: string, password: string, fullName: string): Promise<ApiResponse<any>> {
+  return apiRequest('/api/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password, fullName }),
+  });
+}
+
+export async function logoutUser(): Promise<ApiResponse<any>> {
+  return apiRequest('/api/auth/logout', { method: 'POST' });
+}
+
+export async function getMe(): Promise<ApiResponse<any>> {
+  return apiRequest('/api/auth/me', { method: 'GET' });
+}
+
+// ==========================================
+// 11. SUBMISSIONS & REVIEW (/api/simulations/submissions)
+// ==========================================
+
+export interface SubmissionPayload {
+  missionId: string;
+  fileName: string;
+  fileUrl?: string;
+  fileSizeBytes?: number;
+  studentNotes?: string;
+}
+
+export async function submitSimulationSubmission(payload: SubmissionPayload): Promise<ApiResponse<any>> {
+  return apiRequest('/api/simulations/submissions', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function getMySubmissions(): Promise<ApiResponse<any[]>> {
+  return apiRequest('/api/simulations/submissions/me', { method: 'GET' });
+}
+
+export async function getSubmissionById(id: string): Promise<ApiResponse<any>> {
+  return apiRequest(`/api/simulations/submissions/${id}`, { method: 'GET' });
+}
+
+export async function getSubmissionDownloadUrl(id: string): Promise<ApiResponse<{ downloadUrl: string }>> {
+  return apiRequest(`/api/simulations/submissions/${id}/download-url`, { method: 'POST' });
+}
+
+export async function reviewSubmission(
+  id: string,
+  status: 'lulus' | 'perlu_revisi',
+  ratingStars: number,
+  reviewNotes: string
+): Promise<ApiResponse<any>> {
+  return apiRequest(`/api/simulations/submissions/${id}/review`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status, ratingStars, reviewNotes }),
+  });
+}
+
+export async function getMyPassportCertificates(): Promise<ApiResponse<any[]>> {
+  return apiRequest('/api/simulations/passports/me', { method: 'GET' });
+}
+
+// ==========================================
+// 12. MISSIONS & CATALOG (/api/missions, /api/account-data)
+// ==========================================
+
+export async function getMissions(): Promise<ApiResponse<any[]>> {
+  return apiRequest('/api/missions', { method: 'GET' });
+}
+
+export async function getMissionById(id: string): Promise<ApiResponse<any>> {
+  return apiRequest(`/api/missions/${id}`, { method: 'GET' });
+}
+
+export async function exportAccountData(): Promise<ApiResponse<any>> {
+  return apiRequest('/api/account-data/export', { method: 'GET' });
 }

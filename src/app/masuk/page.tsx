@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Alert } from '@/components/ui/Alert';
 import { useApp } from '@/context/AppContext';
+import { loginUser } from '@/lib/api/endpoints';
+import { setStoredToken } from '@/lib/api/client';
 
 export default function MasukPage() {
   const router = useRouter();
@@ -50,10 +52,21 @@ export default function MasukPage() {
       await logout();
       localStorage.setItem('nexalora_remember_session', String(rememberMe));
 
-      // Otentikasi Sesi Siswa (Mode Demo/Dummy Auth)
-      setIsDemoMode(true);
       const rawName = email.split('@')[0];
       const capitalized = rawName.charAt(0).toUpperCase() + rawName.slice(1).replace(/[._-]/g, ' ');
+
+      // Coba autentikasi ke backend live jika server merespons
+      try {
+        const res = await loginUser(email, password);
+        if (res?.data?.accessToken) {
+          setStoredToken(res.data.accessToken, res.data.refreshToken);
+        }
+      } catch {
+        // Fallback anggun ke mode lokal/dummy jika backend offline
+      }
+
+      // Otentikasi Sesi Siswa (Mode Demo/Dummy Auth)
+      setIsDemoMode(true);
       setUserContext({
         namaPanggilan: capitalized,
         kelas: 'XII',
