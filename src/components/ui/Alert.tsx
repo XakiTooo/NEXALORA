@@ -3,7 +3,8 @@ import React from 'react';
 interface AlertProps {
   variant?: 'error' | 'warning' | 'success' | 'info';
   title?: string;
-  message: string;
+  message?: string;
+  description?: string;
   onClose?: () => void;
   className?: string;
 }
@@ -12,9 +13,11 @@ export const Alert: React.FC<AlertProps> = ({
   variant = 'info',
   title,
   message,
+  description,
   onClose,
   className = '',
 }) => {
+  const alertText = message || description || '';
   const styles = {
     error: {
       container: 'bg-status-error-bg border-red-200 text-status-error-text',
@@ -46,7 +49,7 @@ export const Alert: React.FC<AlertProps> = ({
         </span>
         <div className="flex flex-col gap-0.5">
           {title && <span className="font-bold">{title}</span>}
-          <p className="leading-relaxed">{message}</p>
+          <p className="leading-relaxed">{alertText}</p>
         </div>
       </div>
       {onClose && (
