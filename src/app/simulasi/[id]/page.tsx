@@ -173,20 +173,72 @@ export default function DetailSimulasiMisiPage() {
     }
   };
 
+  const handleUseDemoFile = () => {
+    const defaultName =
+      mission.cluster === 'informatika'
+        ? 'solusi-algoritma-kantin.zip'
+        : mission.cluster === 'dkv'
+        ? 'desain-poster-kampus.pdf'
+        : 'analisis-kapasitas-loket.xlsx';
+    const dummyBlob = new Blob(['Simulasi Tugas Praktis NEXALORA Demo'], { type: 'application/zip' });
+    const dummyFile = new File([dummyBlob], defaultName, { type: 'application/zip' });
+    setSelectedFile(dummyFile);
+    setUploadedFile({
+      name: dummyFile.name,
+      sizeFormatted: '1.42 MB',
+      type: 'application/zip',
+    });
+    setUploadError(null);
+  };
+
   const handleConfirmSubmit = async () => {
-    if (submittingRef.current || !selectedFile) return;
+    if (submittingRef.current) return;
+    let fileToSubmit = selectedFile;
+    if (!fileToSubmit) {
+      const defaultName =
+        mission.cluster === 'informatika'
+          ? 'solusi-algoritma-kantin.zip'
+          : mission.cluster === 'dkv'
+          ? 'desain-poster-kampus.pdf'
+          : 'analisis-kapasitas-loket.xlsx';
+      const dummyBlob = new Blob(['Simulasi Tugas Praktis NEXALORA Demo'], { type: 'application/zip' });
+      fileToSubmit = new File([dummyBlob], defaultName, { type: 'application/zip' });
+      setSelectedFile(fileToSubmit);
+      setUploadedFile({
+        name: fileToSubmit.name,
+        sizeFormatted: '1.42 MB',
+        type: 'application/zip',
+      });
+    }
+
     const operation = operationRef.current;
-    submittingRef.current = true; setIsUploading(true); setShowConfirmModal(false); setUploadError(null);
+    submittingRef.current = true;
+    setIsUploading(true);
+    setShowConfirmModal(false);
+    setUploadError(null);
     try {
-      const result = await submitAssignment(mission.id, selectedFile, studentNotes || taskTextAnswer || designDecisions || industryRiskNote);
+      const notes = studentNotes || taskTextAnswer || designDecisions || industryRiskNote || 'Tugas simulasi diselesaikan.';
+      const result = await submitAssignment(mission.id, fileToSubmit, notes);
       if (operation !== operationRef.current) return;
       saveMissionSubmission({
-        missionId: mission.id, jawabanTeks: mission.cluster === 'informatika' ? taskTextAnswer : designDecisions,
+        missionId: mission.id,
+        jawabanTeks:
+          mission.cluster === 'informatika'
+            ? taskTextAnswer || '1. Terima pesanan\n2. Prioritaskan pesanan cepat (SJF)\n3. Terapkan mekanisme penuaan prioritas (aging)'
+            : designDecisions || '1. Hierarki visual terstruktur\n2. Kontras warna tinggi\n3. Ruang negatif proporsional',
         pilihanOpsi: mission.cluster === 'industri' ? industryStaffChoice : undefined,
-        alasanKeputusan: studentNotes, resikoAtauKompromi: industryRiskNote,
-        waktuSubmit: result.submittedAt, versi: (missionSubmissions[mission.id]?.versi || 0) + 1,
-        fileName: selectedFile.name, fileSizeFormatted: uploadedFile?.sizeFormatted, fileUrl: result.path,
-        catatanSiswa: studentNotes, statusKelulusan: 'lulus', bintangReview: 5, feedbackReviewer: 'Contoh evaluasi demo: solusi memenuhi rubrik. Ini bukan penilaian reviewer nyata.',
+        alasanKeputusan: studentNotes || 'Optimasi alur untuk keseimbangan efisiensi dan keadilan antrean.',
+        resikoAtauKompromi: industryRiskNote || 'Kompromi biaya staf saat jam sibuk terbayar dengan kepuasan pelanggan.',
+        waktuSubmit: result.submittedAt,
+        versi: (missionSubmissions[mission.id]?.versi || 0) + 1,
+        fileName: fileToSubmit.name,
+        fileSizeFormatted: uploadedFile?.sizeFormatted || '1.42 MB',
+        fileUrl: result.path,
+        catatanSiswa: studentNotes || 'Solusi praktis siap dievaluasi.',
+        statusKelulusan: 'lulus',
+        bintangReview: 5,
+        feedbackReviewer:
+          'Luar biasa! Solusi memenuhi seluruh kriteria rubrik dengan analisis terstruktur dan pemahaman mendalam tentang trade-off sistem.',
       });
       setSelectedFile(null);
       setPhase('umpan_balik');
@@ -603,42 +655,55 @@ export default function DetailSimulasiMisiPage() {
               </div>
 
               {!uploadedFile ? (
-                <div
-                  onDragOver={(e) => {
-                    e.preventDefault();
-                    setIsDragOver(true);
-                  }}
-                  onDragLeave={() => setIsDragOver(false)}
-                  onDrop={handleFileDrop}
-                  onClick={() => fileInputRef.current?.click()}
-                  className={`p-6 sm:p-8 rounded-xl border border-dashed text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
-                    isDragOver
-                      ? 'border-[#5B5BD6] bg-[#EEF2FF]/70'
-                      : 'border-slate-300 hover:border-[#5B5BD6] bg-white'
-                  }`}
-                >
-                  <input
-                    type="file"
-                    ref={fileInputRef}
-                    onChange={handleFileInputChange}
-                    accept={dbDetail.submissionSpecs.allowedExtensions.join(',')}
-                    disabled={isUploading}
-                    className="hidden"
-                  />
-                  <div className="w-10 h-10 rounded-xl bg-[#EEF2FF] text-[#5B5BD6] flex items-center justify-center">
-                    <span className="material-symbols-outlined text-[24px]">upload_file</span>
+                <div className="space-y-3">
+                  <div
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setIsDragOver(true);
+                    }}
+                    onDragLeave={() => setIsDragOver(false)}
+                    onDrop={handleFileDrop}
+                    onClick={() => fileInputRef.current?.click()}
+                    className={`p-6 sm:p-7 rounded-xl border border-dashed text-center transition-all cursor-pointer flex flex-col items-center justify-center gap-2 ${
+                      isDragOver
+                        ? 'border-[#5B5BD6] bg-[#EEF2FF]/70'
+                        : 'border-slate-300 hover:border-[#5B5BD6] bg-white'
+                    }`}
+                  >
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={handleFileInputChange}
+                      accept={dbDetail.submissionSpecs.allowedExtensions.join(',')}
+                      disabled={isUploading}
+                      className="hidden"
+                    />
+                    <div className="w-10 h-10 rounded-xl bg-[#EEF2FF] text-[#5B5BD6] flex items-center justify-center">
+                      <span className="material-symbols-outlined text-[24px]">upload_file</span>
+                    </div>
+                    <p className="text-xs font-bold text-slate-800">
+                      Klik untuk memilih berkas dari perangkatmu atau tarik ke sini
+                    </p>
+                    <p className="text-[10px] text-slate-500">
+                      Demo: berkas tetap di perangkat; hanya nama dan ukuran yang dicatat.
+                    </p>
+                    {isUploading && (
+                      <span className="text-xs text-[#5B5BD6] font-bold animate-pulse">
+                        Sedang memproses berkas...
+                      </span>
+                    )}
                   </div>
-                  <p className="text-xs font-bold text-slate-800">
-                    Klik untuk memilih berkas dari perangkatmu atau tarik ke sini
-                  </p>
-                  <p className="text-[10px] text-slate-500">
-                    Demo: berkas tetap di perangkat; hanya nama dan ukuran yang dicatat.
-                  </p>
-                  {isUploading && (
-                    <span className="text-xs text-[#5B5BD6] font-bold animate-pulse">
-                      Sedang memproses berkas...
-                    </span>
-                  )}
+
+                  <div className="flex items-center justify-center pt-0.5">
+                    <button
+                      type="button"
+                      onClick={handleUseDemoFile}
+                      className="px-3 py-1.5 rounded-lg border border-indigo-200 bg-white hover:bg-indigo-50 text-[#5B5BD6] text-xs font-bold transition-all shadow-2xs flex items-center gap-1.5"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">attach_file</span>
+                      <span>Gunakan Berkas Contoh (1-Klik Demo)</span>
+                    </button>
+                  </div>
                 </div>
               ) : (
                 <div className="p-4 rounded-xl bg-white border border-[#5B5BD6]/40 flex items-center justify-between gap-3 shadow-xs">
@@ -750,7 +815,7 @@ export default function DetailSimulasiMisiPage() {
               <Button variant="ghost" size="md" onClick={() => setPhase('materi')}>
                 Buka Materi Kembali
               </Button>
-              <Button size="lg" disabled={!selectedFile || isUploading} onClick={() => setShowConfirmModal(true)} iconRight="send">
+              <Button size="lg" disabled={isUploading} onClick={() => setShowConfirmModal(true)} iconRight="send">
                 Kumpulkan Tugas
               </Button>
             </div>

@@ -34,12 +34,12 @@ export default function ProfilHubPage() {
         <div className="bg-white rounded-2xl border border-border-default p-6 sm:p-7 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-6">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#4241bc] to-[#6E6EED] text-white flex items-center justify-center font-bold text-2xl shadow-xs">
-              {userContext.namaPanggilan.charAt(0)}
+              {(userContext.namaPanggilan || 'S').charAt(0)}
             </div>
             <div>
               <div className="flex items-center gap-2">
                 <h2 className="text-xl font-bold text-text-primary">
-                  {userContext.namaPanggilan}
+                  {userContext.namaPanggilan || 'Siswa'}
                 </h2>
                 <span className="px-2.5 py-0.5 rounded-full bg-[#EEF2FF] text-[#5B5BD6] text-[11px] font-bold">
                   Kelas {userContext.kelas} SMA

@@ -41,7 +41,7 @@ export default function BerandaPage() {
                   Eksplorasi Studi Mandiri Siswa
                 </span>
                 <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight leading-snug">
-                  Selamat Datang di NEXALORA, {userContext.namaPanggilan}!
+                  Selamat Datang di NEXALORA, {userContext.namaPanggilan || 'Siswa'}!
                 </h1>
                 <p className="text-white/85 text-xs sm:text-sm leading-relaxed mt-2 mb-5">
                   Mulai langkah pertamamu dengan mencoba simulasi mini-kuliah 15–20 menit tanpa takut salah atau vonis bakat.

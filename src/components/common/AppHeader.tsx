@@ -74,7 +74,7 @@ export const AppHeader: React.FC = () => {
               </div>
               <div className="hidden sm:flex flex-col text-left">
                 <span className="text-xs font-bold text-text-primary leading-tight">
-                  {userContext.namaPanggilan}
+                  {userContext.namaPanggilan || 'Siswa'}
                 </span>
                 <span className="text-[10px] font-medium text-text-secondary leading-tight mt-0.5">
                   Kelas {userContext.kelas} SMA

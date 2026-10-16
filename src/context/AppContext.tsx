@@ -60,7 +60,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isDemoMode, setIsDemoMode] = useState<boolean>(true);
-  const [userContext, setUserContext] = useState<UserContext>({ namaPanggilan: '', kelas: 'XII', tahunKelulusan: 2026 });
+  const [userContext, setUserContext] = useState<UserContext>(DEMO_PRESET_RANI.context);
   const [preferences, setPreferences] = useState<PracticalPreferences>({ domisili: '', bersediaRelokasi: false, rentangAnggaranMax: null, rencanaTempatTinggal: 'belum_tahu' });
   const [academic, setAcademic] = useState<AcademicRecord>({ skala: '100', semester: 'Semester 1–4', grades: [], isSkipped: false });
   
@@ -79,10 +79,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Hydrate from localStorage if client-side
   useEffect(() => {
     try {
+      const activeUser = localStorage.getItem('nexalora_active_user');
       const saved = localStorage.getItem('nexalora_demo_state_v1');
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (parsed.userContext) setUserContext(parsed.userContext);
+        if (parsed.userContext && parsed.userContext.namaPanggilan) {
+          setUserContext(parsed.userContext);
+        } else if (activeUser) {
+          const u = JSON.parse(activeUser);
+          if (u.nickname) setUserContext((prev) => ({ ...prev, namaPanggilan: u.nickname }));
+        }
         if (parsed.preferences) setPreferences(parsed.preferences);
         if (parsed.academic) setAcademic(parsed.academic);
         if (parsed.interestAnswers) setInterestAnswers(parsed.interestAnswers);
@@ -93,6 +99,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         if (parsed.planTasks) setPlanTasks(parsed.planTasks);
         if (parsed.passportSnapshots) setPassportSnapshots(parsed.passportSnapshots);
         if (typeof parsed.isDemoMode === 'boolean') setIsDemoMode(parsed.isDemoMode);
+      } else if (activeUser) {
+        const u = JSON.parse(activeUser);
+        if (u.nickname) setUserContext((prev) => ({ ...prev, namaPanggilan: u.nickname }));
       }
     } catch {
       // LocalStorage not available or parse error
@@ -154,9 +163,10 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetDemoData = () => {
     isLoggedOutRef.current = false;
-    setUserContext(DEMO_PRESET_RANI.context);
-    setPreferences(DEMO_PRESET_RANI.preferences);
-    setAcademic(DEMO_PRESET_RANI.academic);
+    const rani = DEMO_PRESET_RANI;
+    setUserContext(rani.context);
+    setPreferences(rani.preferences);
+    setAcademic(rani.academic);
     setInterestAnswers({ 1: 5, 2: 4, 3: 3 });
     setBookmarkedMajorIds(['informatika-univ-a']);
     setCompareCartIds(['informatika-univ-a', 'teknik-industri-inst-b']);
@@ -166,7 +176,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setPlanTasks(SEED_30DAY_TASKS);
     setIsDemoMode(true);
     try {
-      localStorage.removeItem('nexalora_demo_state_v1');
+      const stateToSave = {
+        isDemoMode: true,
+        userContext: rani.context,
+        preferences: rani.preferences,
+        academic: rani.academic,
+        interestAnswers: { 1: 5, 2: 4, 3: 3 },
+        bookmarkedMajorIds: ['informatika-univ-a'],
+        compareCartIds: ['informatika-univ-a', 'teknik-industri-inst-b'],
+        missionSubmissions: {},
+        missionReflections: {},
+        planTasks: SEED_30DAY_TASKS,
+        passportSnapshots: [],
+      };
+      localStorage.setItem('nexalora_demo_state_v1', JSON.stringify(stateToSave));
+      localStorage.setItem('nexalora_active_user', JSON.stringify({ email: 'rani.putri@contoh.sch.id', nickname: 'Rani' }));
     } catch {
       // Ignore
     }

@@ -894,16 +894,35 @@ Jika manajemen membuka:
   },
 };
 
+// Aliases for SEED_MISSIONS and route ID compatibility
+DATABASE_MISSIONS['misi-informatika'] = DATABASE_MISSIONS['misi-if-kantin'];
+DATABASE_MISSIONS['misi-dkv'] = DATABASE_MISSIONS['misi-dkv-poster'];
+DATABASE_MISSIONS['misi-industri'] = DATABASE_MISSIONS['misi-industri-loket'];
+
 // =========================================================================
 // ASYNC REPOSITORY API (SEAMLESS PARITY WITH LIVE BACKEND)
 // =========================================================================
+
+export function getMissionDetail(missionId: string): FullMissionDetail {
+  if (DATABASE_MISSIONS[missionId]) return DATABASE_MISSIONS[missionId];
+  if (missionId.includes('informatika') || missionId.includes('if')) return DATABASE_MISSIONS['misi-if-kantin'];
+  if (missionId.includes('dkv')) return DATABASE_MISSIONS['misi-dkv-poster'];
+  if (missionId.includes('industri')) return DATABASE_MISSIONS['misi-industri-loket'];
+  return DATABASE_MISSIONS['misi-if-kantin'];
+}
 
 /**
  * Fetch all available missions from backend API with local DB fallback
  */
 export async function fetchMissionsCatalog(): Promise<DbMission[]> {
-  return Object.values(DATABASE_MISSIONS).map(item => item.mission);
+  const uniqueMissions = [
+    DATABASE_MISSIONS['misi-if-kantin'].mission,
+    DATABASE_MISSIONS['misi-dkv-poster'].mission,
+    DATABASE_MISSIONS['misi-industri-loket'].mission,
+  ];
+  return uniqueMissions;
 }
+
 export async function fetchMissionDetail(missionId: string): Promise<FullMissionDetail> {
-  return DATABASE_MISSIONS[missionId] || DATABASE_MISSIONS['misi-if-kantin'];
+  return getMissionDetail(missionId);
 }

@@ -17,13 +17,9 @@ export default function PilihanAksesPage() {
   const handleStartDemo = () => {
     setIsLoadingDemo(true);
     setDemoError(false);
-
-    setTimeout(() => {
-      setIsLoadingDemo(false);
-      resetDemoData();
-      setIsDemoMode(true);
-      router.push('/beranda');
-    }, 600);
+    resetDemoData();
+    setIsDemoMode(true);
+    router.push('/beranda');
   };
 
   return (
